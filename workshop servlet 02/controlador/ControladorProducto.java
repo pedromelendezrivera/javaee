@@ -1,196 +1,31 @@
-package co.edu.sena.controlador;
 
-
-import co.edu.sena.modelo.ModeloProductos;
-import co.edu.sena.modelo.Productos;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.Resource;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
-
-/**
- *
- * @author PMELENDEZ
- */
-public class ControladorProducto extends HttpServlet {
-
-     private ModeloProductos modeloProductos;
-     //definir o establecer el SataSource
-     @Resource(name="jdbc/Productos") 
-     private DataSource miPool;
-
-     @Override
-    public void init() throws ServletException {
-        super.init(); //To change body of generated methods, choose Tools | Templates.
-       
-        try{
-             modeloProductos = new ModeloProductos(miPool);
-            
-            }catch(Exception ex){ex.printStackTrace();}   
-       
-    }
- 
-
-     
-     
-     
-     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet ControladorProducto</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet ControladorProducto at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-    
-             //obtener el parametro del formulario
-        String elComando = request.getParameter("instruccion");
-        
-       //si no se envia parametro listar productos
-        if(elComando == null)
-           elComando = "listar"; 
-        
-        //redirigir el flujo de ejecución al metodo adecuado 
-        switch(elComando){
-            case "listar":
-               obtenerProductos(request,response);
-               break;
-            case "insertarProducto":
-                agregarProductos(request,response);
-                break;
-            case "cargar":
-        {
-            try {
-                cargaProductos(request,response);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-                break;
-            case "actualizarProducto":
-                actualizaProducto(request,response);
-                break;
-                
-            case "eliminarProducto":
-        {
-            try {
-                eliminarProducto(request,response);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        }
-                break;
-                
-            default:
-               obtenerProductos(request,response);  
-        }  
-         
-         
-         
-    }
-
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
-    
-    
-     
-     
-     
-     
-     
-     
-     
-     
-                 //leer la informacion que viene del formulario
-             String CodArticulo = request.getParameter("cArt");
-             String seccion = request.getParameter("seccion");
-             String NombreArticulo = request.getParameter("nArt");
-             Date fecha = null;
-            SimpleDateFormat formatofecha = new SimpleDateFormat("yyyy-MM-dd");
-             try {
-             fecha = formatofecha.parse(request.getParameter("fecha"));
-             } catch (ParseException ex) {
-                ex.printStackTrace();
-              }        
-            double Precio = Double.parseDouble(request.getParameter("precio"));
-            int Importado = Integer.parseInt(request.getParameter("importado"));
-            String PaisOrigen = request.getParameter("pOrig");
-
-            // crear un objeto de tipo producto
-            Productos nuevoProducto = new Productos(CodArticulo,seccion,NombreArticulo,Precio,fecha,Importado,PaisOrigen,null);      
-               
+       Connection miConexion = null;  
+         PreparedStatement miStatement = null;
          try {
-             modeloProductos.agregarProducto(nuevoProducto);
-         } catch (SQLException ex) {
+            //obtener la conexion
+            miConexion = origenDatos.getConnection();
+             //crear la insruccion sql
+            String miSQL = "INSERT INTO PRODUCTOS (CODIGOARTICULO,SECCION,NOMBREARTICULO,PRECIO,"
+                    + "FECHA,IMPORTADO,PAISDEORIGEN,FOTO) VALUES (?,?,?,?,?,?,?,?)"; 
+
+            miStatement = miConexion.prepareStatement(miSQL);   
+            //establecer parametros del producto
+            miStatement.setString(1, nuevoProducto.getcArt());
+            miStatement.setString(2, nuevoProducto.getSeccion());
+            miStatement.setString(3, nuevoProducto.getnArt());
+            miStatement.setDouble(4, nuevoProducto.getPrecio());
+            java.util.Date utilDate = nuevoProducto.getFecha();
+            java.sql.Date fechaConvertida = new java.sql.Date(utilDate.getTime());
+            miStatement.setDate(5,fechaConvertida);
+            miStatement.setInt(6, nuevoProducto.getImportado());
+            miStatement.setString(7, nuevoProducto.getpOrg());
+            miStatement.setString(8, nuevoProducto.getFoto());
+
+        //ejecutar la instruccion sql
+            miStatement.execute();
+        } catch (SQLException ex) {
             ex.printStackTrace();
-         }
-             //volver a listar productos
-             obtenerProductos(request,response);  
-     
-    
-     
-     
-     
-     
-    
-}
+        }finally{
+            miStatement.close();
+            miConexion.close();
+        }
