@@ -80,18 +80,51 @@ public class ControladorProducto extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
-        //obtener la lista de productos desde el modelo
-        List<Productos> productos;
+    
+             //obtener el parametro del formulario
+        String elComando = request.getParameter("instruccion");
+        
+       //si no se envia parametro listar productos
+        if(elComando == null)
+           elComando = "listar"; 
+        
+        //redirigir el flujo de ejecución al metodo adecuado 
+        switch(elComando){
+            case "listar":
+               obtenerProductos(request,response);
+               break;
+            case "insertarProducto":
+                agregarProductos(request,response);
+                break;
+            case "cargar":
+        {
+            try {
+                cargaProductos(request,response);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+                break;
+            case "actualizarProducto":
+                actualizaProducto(request,response);
+                break;
+                
+            case "eliminarProducto":
+        {
+            try {
+                eliminarProducto(request,response);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+                break;
+                
+            default:
+               obtenerProductos(request,response);  
+        }  
          
-        try {
-              productos = modeloProductos.getProductos();
-              //agregar lista de prodctuso al request
-              request.setAttribute("LISTAPRODUCTOS",productos);
-             //enviar el request a la pagina JSP
-             RequestDispatcher miDispatcher = request.getRequestDispatcher("/listaProductos.jsp");
-             miDispatcher.forward(request, response);
-         } catch (Exception ex) {ex.printStackTrace(); }
+         
+         
     }
 
     /**
