@@ -1,31 +1,30 @@
 
-       Connection miConexion = null;  
-         PreparedStatement miStatement = null;
-         try {
-            //obtener la conexion
-            miConexion = origenDatos.getConnection();
-             //crear la insruccion sql
-            String miSQL = "INSERT INTO PRODUCTOS (CODIGOARTICULO,SECCION,NOMBREARTICULO,PRECIO,"
-                    + "FECHA,IMPORTADO,PAISDEORIGEN,FOTO) VALUES (?,?,?,?,?,?,?,?)"; 
-
-            miStatement = miConexion.prepareStatement(miSQL);   
-            //establecer parametros del producto
-            miStatement.setString(1, nuevoProducto.getcArt());
-            miStatement.setString(2, nuevoProducto.getSeccion());
-            miStatement.setString(3, nuevoProducto.getnArt());
-            miStatement.setDouble(4, nuevoProducto.getPrecio());
-            java.util.Date utilDate = nuevoProducto.getFecha();
-            java.sql.Date fechaConvertida = new java.sql.Date(utilDate.getTime());
-            miStatement.setDate(5,fechaConvertida);
-            miStatement.setInt(6, nuevoProducto.getImportado());
-            miStatement.setString(7, nuevoProducto.getpOrg());
-            miStatement.setString(8, nuevoProducto.getFoto());
-
-        //ejecutar la instruccion sql
-            miStatement.execute();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }finally{
-            miStatement.close();
-            miConexion.close();
-        }
+            try {
+                 //leer los datos del formulario actualizaProductov2
+                 String CodArticulo = request.getParameter("cArt");
+                 String seccion = request.getParameter("seccion");
+                 String NombreArticulo = request.getParameter("nArt");
+                 Date fecha = null;
+                 SimpleDateFormat formatofecha = new SimpleDateFormat("yyyy-MM-dd");
+                 try {
+                     fecha = formatofecha.parse(request.getParameter("fecha"));
+                 } catch (ParseException ex) {
+                     ex.printStackTrace();
+                 }
+                 double Precio = Double.parseDouble(request.getParameter("precio"));
+                 int Importado = Integer.parseInt(request.getParameter("importado"));
+                 String PaisOrigen = request.getParameter("pOrig");
+                 
+                 //crear un objeto de tipo producto con la informacion del formulario
+                 Productos productoActualizado = new Productos(CodArticulo,seccion,NombreArticulo,Precio,fecha,Importado,PaisOrigen,null);
+                 
+                 //actualizar la BBDD con la informacion del objeto producto
+                 modeloProductos.actualizarProducto(productoActualizado);
+                 
+                 //Volver a listar con la informacion actualizada
+                 obtenerProductos(request,response);
+                 
+             } catch (SQLException ex) {
+                ex.printStackTrace();
+              } 
+ 
