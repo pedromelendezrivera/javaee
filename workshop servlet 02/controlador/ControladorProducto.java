@@ -1,47 +1,21 @@
 
- Productos elProducto = null;
-        Connection miConexion = null; 
-        PreparedStatement miStatement = null;        
-        ResultSet miResultset = null;
-        String cArticulo = codigoArticulo; 
-    
-     try{       
-         //establece la conexion con la base de datos
-          miConexion = origenDatos.getConnection();
-
-         //crea sql que busque el producto
-//         String sql = "SELECT * FROM PRODUCTOS WHERE CODIGOARTICULO=?";   
-         String sql = "SELECT * FROM PRODUCTOS WHERE CODIGOARTICULO=?";   
-         
-        //crea la consulta preparada
-          miStatement = miConexion.prepareStatement(sql);
-          
-        //establece los parametros
-          miStatement.setString(1, cArticulo);
-        
-          //ejecuta la consulta
-          miResultset = miStatement.executeQuery();
-          
-        //obTener los datos de respuesta
-         if(miResultset.next()){
-              String cArt =  miResultset.getString("CODIGOARTICULO");
-              String seccion =  miResultset.getString("SECCION");
-              String n_art =  miResultset.getString("NOMBREARTICULO");
-              Double precio =  miResultset.getDouble("PRECIO");
-              Date fecha =  miResultset.getDate("FECHA"); //import java.util.Date;
-              int importado = miResultset.getInt("IMPORTADO");
-              String porigen =  miResultset.getString("PAISDEORIGEN");
-              String foto =  miResultset.getString("FOTO");
- 
-              elProducto =  new Productos(cArt,seccion,n_art,precio,fecha,importado,porigen,foto); 
-              
-         }else{
-           throw new Exception("No se encontro el producto con código: "+cArticulo);  
-         }   
- 
-        }catch(Exception ex){ex.printStackTrace();}
-         finally{
-            miStatement.close();
-            miConexion.close();
+         //leer los datos del formulario actualizaProductov2
+        String CodArticulo = request.getParameter("cArt");
+        String seccion = request.getParameter("seccion");
+        String NombreArticulo = request.getParameter("nArt");
+        Date fecha = null;
+        SimpleDateFormat formatofecha = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            fecha = formatofecha.parse(request.getParameter("fecha"));
+        } catch (ParseException ex) {
+            ex.printStackTrace();
         }
-       return elProducto; 
+        double Precio = Double.parseDouble(request.getParameter("precio"));
+        int Importado = Integer.parseInt(request.getParameter("importado"));
+        String PaisOrigen = request.getParameter("pOrig");
+        //crear un objeto de tipo producto con la informacion del formulario
+        Productos productoActualizado = new Productos(CodArticulo,seccion,NombreArticulo,Precio,fecha,Importado,PaisOrigen,null);
+        //actualizar la BBDD con la informacion del objeto producto
+        modeloProductos.actualizarProducto(productoActualizado);
+        //Volver a listar con la informacion actualizada
+        obtenerProductos(request,response); 
